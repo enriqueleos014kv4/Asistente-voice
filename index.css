@@ -878,6 +878,7 @@ canvas {
 .action-button.approve { background-color: #5cb85c; }
 .action-button.process { background-color: #337ab7; }
 .action-button.finish { background-color: #f0ad4e; }
+.action-button.edit { background-color: var(--color-accent2, #777); }
 
 /* Styles for Admin Tabs and Inventory */
 .admin-tabs {

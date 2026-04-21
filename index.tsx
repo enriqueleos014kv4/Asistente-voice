@@ -42,6 +42,8 @@ Here is the business information you MUST use when asked:
 
 Your primary goal is to assist users who have tire problems by collecting their information and scheduling a service. You are also empowered to answer questions about the company and its services.
 
+All prices MUST be mentioned in Pesos Mexicanos (MXN) using the "$" symbol (e.g., "$150 MXN"). Always append "MXN" to any price you give the user.
+
 You will be provided with an inventory list of products and services. You MUST use this list to answer any user questions about prices, availability, or service times.
 
 When a user wants to schedule a service, you must follow these steps in a conversational manner, asking for one piece of information at a time if the user doesn't provide it all at once:
@@ -116,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async (event) => {
               .map(
                 (item) =>
                   `- ${item.name} (${item.type}): ${
-                    item.price ? `$${item.price}` : 'Consultar'
+                    item.price ? `$${item.price} MXN` : 'Consultar'
                   }. ${item.description || ''}`,
               )
               .join('\n')
@@ -284,7 +286,7 @@ document.addEventListener('DOMContentLoaded', async (event) => {
     if (mapApp.messages.length > 0) return;
     // Use sendMessageAction to ensure the full context (inventory) is used.
     await mapApp.sendMessageAction(
-      'Por favor, preséntate cordialmente como el asistente de LLANTERA MÓVIL COFRADÍA y saluda al usuario para iniciar la conversación.',
+      'Saluda amablemente al usuario con un mensaje cálido y profesional. Preséntate como el asistente virtual de LLANTERA MÓVIL COFRADÍA, menciona que estás disponible las 24 horas en Mazamitla y pregunta en qué puedes ayudar hoy relacionado con sus llantas o servicios.',
       'system',
     );
   };

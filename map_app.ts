@@ -22,7 +22,6 @@
 import {Loader} from '@googlemaps/js-api-loader';
 import hljs from 'highlight.js';
 import {html, LitElement, PropertyValueMap} from 'lit';
-import {customElement, query, state} from 'lit/decorators.js';
 import {classMap} from 'lit/directives/class-map.js';
 import {Marked} from 'marked';
 import {markedHighlight} from 'marked-highlight';
@@ -83,7 +82,7 @@ declare global {
 }
 
 /** Markdown formatting function with syntax hilighting */
-export const marked = new Marked(
+export const marked = new Marked().use(
   markedHighlight({
     async: true,
     emptyLangClass: 'hljs',
@@ -196,30 +195,55 @@ interface InventoryItem {
 /**
  * MapApp component for Photorealistic 3D Maps.
  */
-@customElement('gdm-map-app')
 export class MapApp extends LitElement {
-  @query('#anchor') anchor?: HTMLDivElement;
-  // Google Maps: Reference to the <gmp-map-3d> DOM element where the map is rendered.
-  @query('#mapContainer') mapContainerElement?: HTMLElement; // Will be <gmp-map-3d>
-  @query('#messageInput') messageInputElement?: HTMLInputElement;
-  @query('#inventory-form') inventoryFormElement?: HTMLFormElement;
+  static properties = {
+    chatState: {state: true},
+    isRunning: {state: true},
+    selectedChatTab: {state: true},
+    inputMessage: {state: true},
+    messages: {state: true},
+    mapInitialized: {state: true},
+    mapError: {state: true},
+    currentView: {state: true},
+    serviceHistory: {state: true},
+    isLocationSelectionMode: {state: true},
+    locationSelectionMessage: {state: true},
+    isMuted: {state: true},
+    isListening: {state: true},
+    currentAdminTab: {state: true},
+    inventory: {state: true},
+    editingInventoryItem: {state: true},
+  };
 
-  @state() chatState = ChatState.IDLE;
-  @state() isRunning = true;
-  @state() selectedChatTab = ChatTab.GEMINI;
-  @state() inputMessage = '';
-  @state() messages: HTMLElement[] = [];
-  @state() mapInitialized = false;
-  @state() mapError = '';
-  @state() currentView: 'chat' | 'admin' = 'chat';
-  @state() serviceHistory: ServiceHistoryItem[] = [];
-  @state() isLocationSelectionMode = false;
-  @state() locationSelectionMessage = '';
-  @state() isMuted = false;
-  @state() isListening = false;
-  @state() currentAdminTab: 'history' | 'inventory' = 'history';
-  @state() inventory: InventoryItem[] = [];
-  @state() editingInventoryItem: InventoryItem | null = null;
+  get anchor() {
+    return this.querySelector('#anchor') as HTMLDivElement;
+  }
+  get mapContainerElement() {
+    return this.querySelector('#mapContainer') as HTMLElement;
+  }
+  get messageInputElement() {
+    return this.querySelector('#messageInput') as HTMLInputElement;
+  }
+  get inventoryFormElement() {
+    return this.querySelector('#inventory-form') as HTMLFormElement;
+  }
+
+  chatState = ChatState.IDLE;
+  isRunning = true;
+  selectedChatTab = ChatTab.GEMINI;
+  inputMessage = '';
+  messages: HTMLElement[] = [];
+  mapInitialized = false;
+  mapError = '';
+  currentView: 'chat' | 'admin' = 'chat';
+  serviceHistory: ServiceHistoryItem[] = [];
+  isLocationSelectionMode = false;
+  locationSelectionMessage = '';
+  isMuted = false;
+  isListening = false;
+  currentAdminTab: 'history' | 'inventory' = 'history';
+  inventory: InventoryItem[] = [];
+  editingInventoryItem: InventoryItem | null = null;
 
   // Google Maps: Instance of the Google Maps 3D map.
   private map?: any;
@@ -833,6 +857,23 @@ You can find this constant near the top of the map_app.ts file.`;
     }
   }
 
+  private _handleEditPrice(serviceId: string) {
+    const item = this.serviceHistory.find((s) => s.id === serviceId);
+    if (!item) return;
+
+    const newPrice = prompt(
+      'Por favor, introduce el nuevo precio del servicio:',
+      item.price || '0.00',
+    );
+    if (newPrice !== null && newPrice.trim() !== '') {
+      this.serviceHistory = this.serviceHistory.map((service) =>
+        service.id === serviceId
+          ? {...service, price: newPrice}
+          : service,
+      );
+    }
+  }
+
   private async inputKeyDownAction(e: KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -1069,7 +1110,7 @@ You can find this constant near the top of the map_app.ts file.`;
                         ${service.timestamp.toLocaleString('es-MX')}
                       </p>
                       ${service.price
-                        ? html`<p><strong>Precio:</strong> $${service.price}</p>`
+                        ? html`<p><strong>Precio:</strong> $${service.price} MXN</p>`
                         : ''}
                     </div>
                     <div class="service-status">
@@ -1101,6 +1142,13 @@ You can find this constant near the top of the map_app.ts file.`;
                             class="action-button finish"
                             @click=${() => this._handleFinish(service.id)}>
                             Terminar
+                          </button>`
+                        : ''}
+                      ${service.status === 'Terminado'
+                        ? html` <button
+                            class="action-button edit"
+                            @click=${() => this._handleEditPrice(service.id)}>
+                            Editar Precio
                           </button>`
                         : ''}
                     </div>
@@ -1163,7 +1211,7 @@ You can find this constant near the top of the map_app.ts file.`;
                   (item) => html`
             <div class="inventory-item">
               <div class="inventory-item-details">
-                <p><strong>${item.name}</strong> ($${item.price})</p>
+                <p><strong>${item.name}</strong> ($${item.price} MXN)</p>
                 <p><small>${item.type}</small></p>
                 ${
                   item.description
@@ -1418,3 +1466,5 @@ You can find this constant near the top of the map_app.ts file.`;
     </div>`;
   }
 }
+
+customElements.define('gdm-map-app', MapApp);
